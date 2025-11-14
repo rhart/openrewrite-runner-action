@@ -51,7 +51,8 @@ for SELECTED_RECIPE in "${RECIPE_ARRAY[@]}"; do
     if [[ "$param_key" =~ ^${SELECTED_RECIPE_TRIM}\.(.+)$ ]]; then
       param_name="${BASH_REMATCH[1]}"
       param_value="${params[$param_key]}"
-      recipe_content=$(echo "$recipe_content" | sed "s|{{${param_name}}}|${param_value}|g")
+      # Handle both {{paramName}} and {{ paramName }} (with or without spaces)
+      recipe_content=$(echo "$recipe_content" | sed "s|{{ *${param_name} *}}|${param_value}|g")
       echo "  🔄 Substituted {{${param_name}}} with ${param_value}"
     fi
   done
