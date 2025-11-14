@@ -1,0 +1,11 @@
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: com.example.FixKubernetesManifests
+displayName: Fix Kubernetes manifest selectors
+description: Updates Service selectors to match Deployment labels
+recipeList:
+  - org.openrewrite.yaml.ChangePropertyValue:
+      propertyKey: spec.selector.app
+      newValue: hello-kubernetes
+      oldValue: goodbye-kubernetes
+      filePattern: "{{ targetDirectory }}/manifests.yaml"

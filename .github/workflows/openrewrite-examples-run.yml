@@ -1,0 +1,23 @@
+name: OpenRewrite Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipes:
+        description: 'Comma-separated list of recipe names.'
+        required: true
+        default: 'com.example.FixKubernetesManifests'
+      recipe-parameters:
+        description: 'Comma-separated key=value pairs in namespaced format. Format: "recipeName.parameterName=value". Example: "com.example.CreateFile.targetDirectory=kubernetes/instance-1"'
+        required: false
+        default: 'com.example.FixKubernetesManifests.targetDirectory=examples/openrewrite/yaml/project-*'
+
+jobs:
+  call-openrewrite-workflow:
+    uses: ./.github/workflows/openrewrite-workflow.yml
+    secrets: inherit
+    with:
+      recipes-dir: "examples/openrewrite/recipes"
+      rewrite-dependencies: "org.openrewrite:rewrite-yaml:8.37.1"
+      recipes: ${{ github.event.inputs.recipes }}
+      recipe-parameters: ${{ github.event.inputs.recipe-parameters }}
