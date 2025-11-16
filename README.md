@@ -52,7 +52,7 @@ jobs:
       recipes: ${{ github.event.inputs.recipes }}
       recipe-parameters: ${{ github.event.inputs.recipe-parameters }}
       recipes-dir: "examples/openrewrite/recipes"
-      rewrite-dependencies: "org.openrewrite:rewrite-yaml:8.37.1"
+      rewrite-dependencies: "org.openrewrite:rewrite-yaml:8.66.3"
 ```
 
 ### 3. Run It
@@ -68,9 +68,10 @@ Go to **Actions** → **OpenRewrite** → **Run workflow** and provide:
 | `recipes` | Yes | - | Comma-separated recipe names (e.g., `com.example.MyRecipe`) |
 | `recipe-parameters` | No | - | Namespaced parameters: `recipeName.paramName=value` |
 | `recipes-dir` | No | `recipes` | Directory containing recipe YAML files |
-| `rewrite-dependencies` | No | - | OpenRewrite dependencies (e.g., `org.openrewrite:rewrite-yaml:8.37.1`) |
+| `rewrite-dependencies` | No | - | OpenRewrite dependencies (e.g., `org.openrewrite:rewrite-yaml:8.66.3`) |
 | `java-version` | No | `17` | Java version to use |
 | `gradle-version` | No | `9.2.0` | Gradle version to use |
+| `openrewrite-version` | No | `8.66.3` | OpenRewrite plugin version to use |
 
 ## Recipe Parameters
 
@@ -99,4 +100,3 @@ See the [YAML example](examples/openrewrite/yaml/README.md) for a complete worki
 ## License
 
 See [LICENSE](LICENSE) for details.
-

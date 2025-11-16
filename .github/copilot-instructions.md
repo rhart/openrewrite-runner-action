@@ -61,9 +61,10 @@ README.md                              # Main project documentation
 | `recipes` | Yes | - | Comma-separated fully qualified recipe names (e.g., `com.example.FixKubernetesManifests`) |
 | `recipe-parameters` | No | - | Namespaced parameters: `recipeName.paramName=value` |
 | `recipes-dir` | No | `recipes` | Directory containing recipe YAML files |
-| `rewrite-dependencies` | No | - | OpenRewrite dependencies (e.g., `org.openrewrite:rewrite-yaml:8.37.1`) |
+| `rewrite-dependencies` | No | - | OpenRewrite dependencies (e.g., `org.openrewrite:rewrite-yaml:8.66.3`) |
 | `java-version` | No | `17` | Java version to use |
 | `gradle-version` | No | `9.2.0` | Gradle version to use |
+| `openrewrite-version` | No | `8.66.3` | OpenRewrite plugin version to use |
 
 ### openrewrite-runner (Action)
 
@@ -113,6 +114,28 @@ The `process-recipes.sh` script handles substitution using sed with pattern: `{{
 - **Output**: `build.gradle`, `settings.gradle`, `src/` directory
 
 ## Important Implementation Details
+
+### Version Alignment
+
+**Critical**: OpenRewrite dependency versions should match the OpenRewrite plugin version.
+
+- OpenRewrite modules (`rewrite-yaml`, `rewrite-java`, `rewrite-json`, etc.) are released together
+- Using mismatched versions can cause runtime errors, missing features, or incompatibilities
+- When specifying `rewrite-dependencies`, ensure the version matches `openrewrite-version`
+
+**Example - Correct alignment:**
+```yaml
+openrewrite-version: "6.25.0"
+rewrite-dependencies: "org.openrewrite:rewrite-yaml:6.25.0"
+```
+
+**Example - Incorrect (version mismatch):**
+```yaml
+openrewrite-version: "6.25.0"
+rewrite-dependencies: "org.openrewrite:rewrite-yaml:8.37.1"  # ❌ Wrong!
+```
+
+**Best Practice**: When updating `openrewrite-version`, update all dependency versions to match.
 
 ### Permissions Required
 
@@ -205,4 +228,3 @@ Developers who want to:
 - Fix security vulnerabilities through automated patches
 - Transform YAML/JSON configuration files at scale
 - Maintain code quality without local build tool setup
-

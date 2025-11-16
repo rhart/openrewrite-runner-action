@@ -30,6 +30,11 @@ on:
         type: string
         required: false
         default: '9.2.0'
+      openrewrite-version:
+        description: 'OpenRewrite plugin version to use (default: 8.66.3)'
+        type: string
+        required: false
+        default: '8.66.3'
 
 jobs:
   openrewrite:
@@ -54,6 +59,7 @@ jobs:
           rewrite-dependencies: ${{ inputs.rewrite-dependencies }}
           java-version: ${{ inputs.java-version }}
           gradle-version: ${{ inputs.gradle-version }}
+          openrewrite-version: ${{ inputs.openrewrite-version }}
 
       - name: Create Pull Request
         if: steps.openrewrite.outputs.changes-detected == 'true'

@@ -24,6 +24,10 @@ inputs:
     description: 'Gradle version to use'
     required: false
     default: '9.2.0'
+  openrewrite-version:
+    description: 'OpenRewrite plugin version to use'
+    required: false
+    default: '8.66.3'
 
 outputs:
   changes-detected:
@@ -71,7 +75,8 @@ runs:
         # Setup Gradle wrapper and build files
         "${{ github.action_path }}/scripts/setup-gradle.sh" \
           "$RECIPES_CLEAN" \
-          "${{ inputs.rewrite-dependencies }}"
+          "${{ inputs.rewrite-dependencies }}" \
+          "${{ inputs.openrewrite-version }}"
 
     - name: Run OpenRewrite
       shell: bash

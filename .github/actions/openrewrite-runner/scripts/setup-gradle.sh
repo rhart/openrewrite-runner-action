@@ -3,6 +3,7 @@ set -e
 
 RECIPES="$1"
 REWRITE_DEPS="$2"
+OPENREWRITE_VERSION="${3:-8.66.3}"
 
 mkdir -p src/main/java
 
@@ -32,7 +33,7 @@ done
 cat > build.gradle << EOF
 plugins {
     id 'java'
-    id 'org.openrewrite.rewrite' version '6.25.0'
+    id 'org.openrewrite.rewrite' version '${OPENREWRITE_VERSION}'
 }
 
 repositories { mavenCentral() }
