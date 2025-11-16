@@ -1,87 +1,102 @@
 # openrewrite-workflow
 
-A reusable GitHub Actions workflow for running OpenRewrite recipes without requiring a build tool (Maven, Gradle, etc.).
+A reusable GitHub Actions workflow for running OpenRewrite recipes without requiring build tool configuration in your repository.
 
 ## Overview
 
-This workflow provides a simple, centralized way to run OpenRewrite recipes across multiple repositories. Instead of configuring Maven or Gradle plugins in each repository, you can call this reusable workflow to apply OpenRewrite transformations directly to your codebase.
+This workflow temporarily sets up Gradle to run OpenRewrite recipes, then cleans up all build files afterward - leaving only your code changes. No need to maintain Maven, Gradle, or OpenRewrite configuration in your repositories.
 
 ## Features
 
-- **Build Tool Independent**: No need to configure Maven, Gradle, or the OpenRewrite CLI
+- **No Build Tool Required**: Consuming repositories don't need any build tool configuration
+- **Temporary Setup**: Gradle is added only during workflow execution, then removed
+- **Parameterized Recipes**: Pass configuration to recipes using namespaced parameters
+- **Automated PRs**: Creates pull requests with changes for review
 - **Reusable**: Call from any repository using the `uses` keyword
-- **Flexible Recipe Configuration**: Support for multiple recipes with customizable parameters
-- **Automated PR Creation**: Automatically creates pull requests with the changes
-- **Recipe Options**: Pass configuration to recipes using namespaced parameters
 
-## Usage
+## Quick Start
 
-Call this workflow from your repository by creating a workflow file (e.g., `.github/workflows/openrewrite.yml`):
+### 1. Enable Repository Permission
+
+Before using this workflow, enable PR creation in your repository:
+
+**Settings** → **Actions** → **General** → **Workflow permissions**:
+- ✅ Select "Read and write permissions"
+- ✅ Check "Allow GitHub Actions to create and approve pull requests"
+
+### 2. Call the Workflow
+
+Create `.github/workflows/openrewrite.yml` in your repository:
 
 ```yaml
-name: OpenRewrite Auto-Upgrade
+name: OpenRewrite
 
 on:
   workflow_dispatch:
     inputs:
       recipes:
-        description: 'Comma-separated list of recipe names.'
+        description: 'Comma-separated recipe names'
+        required: true
+      recipe-parameters:
+        description: 'Recipe parameters (recipeName.paramName=value)'
         required: false
-        default: 'com.example.FixKubernetesManifests'
-      recipe-options:
-        description: 'Comma-separated key=value pairs in namespaced format.'
-        required: false
-        default: ''
 
 jobs:
-  call-openrewrite-workflow:
-    uses: ./.github/workflows/reusable-openrewrite-auto-pr.yml
+  run-openrewrite:
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: rhart/openrewrite-workflow/.github/workflows/openrewrite-workflow.yml@main
     secrets: inherit
     with:
       recipes: ${{ github.event.inputs.recipes }}
-      recipe-options: ${{ github.event.inputs.recipe-options }}
+      recipe-parameters: ${{ github.event.inputs.recipe-parameters }}
+      recipes-dir: "examples/openrewrite/recipes"
+      rewrite-dependencies: "org.openrewrite:rewrite-yaml:8.37.1"
 ```
 
-### Input Parameters
+### 3. Run It
 
-#### `recipes`
-Comma-separated list of fully qualified recipe names to run.
+Go to **Actions** → **OpenRewrite** → **Run workflow** and provide:
+- **recipes**: `com.example.FixKubernetesManifests`
+- **recipe-parameters**: `com.example.FixKubernetesManifests.targetDirectory=path/to/files`
 
-**Example:**
-```
-com.example.FixKubernetesManifests
-```
+## Input Parameters
 
-#### `recipe-options`
-Comma-separated key=value pairs for configuring recipe parameters using namespaced format.
+| Parameter | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `recipes` | Yes | - | Comma-separated recipe names (e.g., `com.example.MyRecipe`) |
+| `recipe-parameters` | No | - | Namespaced parameters: `recipeName.paramName=value` |
+| `recipes-dir` | No | `recipes` | Directory containing recipe YAML files |
+| `rewrite-dependencies` | No | - | OpenRewrite dependencies (e.g., `org.openrewrite:rewrite-yaml:8.37.1`) |
+| `java-version` | No | `17` | Java version to use |
+| `gradle-version` | No | `9.2.0` | Gradle version to use |
 
-**Format:** `recipeName.parameterName=value`
+## Recipe Parameters
 
-**Examples:**
-- Single option: `com.example.CreateFile.targetDirectory=kubernetes/instance-1`
-- Multiple options: `com.example.Recipe1.param1=value1,com.example.Recipe2.param2=value2`
+Use **namespaced format** to pass parameters to recipes:
+
+**Format**: `recipeName.parameterName=value`
+
+**Examples**:
+- Single parameter: `com.example.MyRecipe.targetDir=src/main`
+- Multiple parameters: `com.example.Recipe1.param1=value1,com.example.Recipe2.param2=value2`
+- Wildcards: `com.example.MyRecipe.targetDir=projects/project-*`
 
 ## How It Works
 
-This workflow runs OpenRewrite recipes directly without requiring a build tool configuration in your repository. It:
+1. **Setup**: Temporarily creates `build.gradle`, `settings.gradle`, and `rewrite.yml` 
+2. **Execute**: Runs OpenRewrite recipes with your specified parameters
+3. **Cleanup**: Removes all temporary build files
+4. **PR**: Creates a pull request with only the code changes
 
-1. Accepts recipe names and configuration options as inputs
-2. Runs the specified OpenRewrite recipes on your codebase
-3. Creates a pull request with the changes (if any)
+The consuming repository remains clean - no build tool configuration is committed.
 
-## Use Cases
+## Example
 
-- **Code Modernization**: Upgrade frameworks and libraries automatically (e.g., Spring Boot, JUnit)
-- **Style Enforcement**: Apply consistent code formatting and style across repositories
-- **Security Patches**: Automatically fix security vulnerabilities
-- **Refactoring**: Apply automated refactorings at scale
-- **Custom Transformations**: Run custom OpenRewrite recipes for organization-specific patterns
-
-## Requirements
-
-- GitHub Actions enabled in your repository
-- Appropriate permissions for creating pull requests
+See the [YAML example](examples/openrewrite/yaml/README.md) for a complete working example that fixes Kubernetes manifest selectors.
 
 ## License
 
 See [LICENSE](LICENSE) for details.
+

@@ -1,6 +1,7 @@
 # GitHub Copilot Instructions
 
 ## Project Overview
+
 This is a reusable GitHub Actions workflow for running OpenRewrite recipes without requiring the consuming repository to have any build tool configuration. The workflow temporarily adds Gradle to run OpenRewrite recipes, then removes all build tool files afterward, leaving only the code changes.
 
 ## Project Context
@@ -11,102 +12,197 @@ This is a reusable GitHub Actions workflow for running OpenRewrite recipes witho
 - Enable automated code refactoring and migrations across multiple repositories regardless of their build setup
 
 ### Key Concepts
-- **Reusable Workflow**: This is a `.github/workflows/*.yml` file that can be called by other repositories using the `workflow_call` trigger
-- **OpenRewrite**: A refactoring ecosystem for source code, providing automated code transformations through "recipes"
-- **Temporary Build Setup**: The workflow temporarily adds Gradle configuration files to run OpenRewrite, then cleans them up automatically
-- **No Build Tool Required in Target Repo**: Consuming repositories don't need Gradle, Maven, or any build tool configured - the workflow handles everything
-## Usage Example
+- **Reusable Workflow**: Called by other repositories using `workflow_call` trigger
+- **OpenRewrite**: A refactoring ecosystem providing automated code transformations through "recipes"
+- **Temporary Build Setup**: Gradle is added temporarily during execution, then cleaned up
+- **No Build Tool Required**: Consuming repositories don't need Gradle, Maven, or any build tool - the workflow handles everything
 
-Here's how consumers call this reusable workflow:
+## How It Works
 
-1. Temporarily creates Gradle configuration files (build.gradle, settings.gradle, rewrite.yml) in the target repository
-2. Sets up Java and Gradle in the GitHub Actions runner environment
+1. **Setup**: Temporarily creates `build.gradle`, `settings.gradle`, and `rewrite.yml` in the target repository
+2. **Execute**: Runs OpenRewrite recipes with specified parameters using Gradle
+3. **Cleanup**: Removes all temporary build files (build.gradle, settings.gradle, rewrite.yml, .gradle/, gradle/, gradlew, gradlew.bat)
+4. **PR Creation**: Creates a pull request with only the code changes
 
-4. Removes all temporary build tool files after execution
-5. Only the actual code changes from OpenRewrite remain in the repository
+**Key Point**: The consuming repository never commits or maintains any build tool configuration. The Gradle setup exists only during workflow execution.
 
-**Key Point**: The consuming repository never needs to commit or maintain any build tool configuration. The Gradle setup exists only during workflow execution.
-    inputs:
-      recipes:
-        description: 'Comma-separated list of recipe names.'
-        required: false
-        default: 'com.example.FixKubernetesManifests'
-      recipe-parameters:
-        description: 'Comma-separated key=value pairs in namespaced format. Format: "recipeName.parameterName=value". Example: "com.example.CreateFile.targetDirectory=kubernetes/instance-1"'
-        required: false
-        default: ''
+## Project Structure
 
-jobs:
-  call-openrewrite-workflow:
-    uses: ./.github/workflows/reusable-openrewrite-auto-pr.yml
-    secrets: inherit
-    with:
-      recipe-parameters: ${{ github.event.inputs.recipe-parameters }}
+```
+.github/
+  workflows/
+    openrewrite-workflow.yml          # Main reusable workflow
+    openrewrite-run.yml                # Manual test workflow
+    openrewrite-examples-run.yml       # Example runner with defaults
+  actions/
+    openrewrite-runner/
+      action.yml                       # Composite action definition
+      scripts/
+        process-recipes.sh             # Handles recipe loading and parameter substitution
+        setup-gradle.sh                # Creates temporary Gradle build files
+  copilot-instructions.md              # This file
+examples/
+  openrewrite/
+    recipes/
+      fix-kubernetes-manifests.yml     # Example recipe definition
+    yaml/
+      project-blue/manifests.yaml      # Example YAML file to transform
+      project-green/manifests.yaml     # Example YAML file to transform
+      README.md                        # Example documentation
+README.md                              # Main project documentation
 ```
 
-## Technical Guidelines
+## Workflow Inputs
 
-### Workflow Design
-- Use `workflow_call` as the trigger for reusable workflows
-- **Primary Inputs**:
-  - `recipes`: Comma-separated list of fully qualified recipe names (e.g., `com.example.FixKubernetesManifests`)
-  - `recipe-parameters`: Comma-separated key=value pairs for recipe parameters in namespaced format
-    - Format: `recipeName.parameterName=value`
-    - Example: `com.example.CreateFile.targetDirectory=kubernetes/instance-1`
-  - `rewrite-dependencies`: OpenRewrite module dependencies to include
-  - `java-version`: Java version for running OpenRewrite (default: 17)
-  - `gradle-version`: Gradle version to use temporarily (default: 9.2.0)
-  - Additional inputs as needed (OpenRewrite version, target paths, etc.)
-- Provide outputs for:
-  - Success/failure status
-  - Files changed
-- **Critical cleanup step**: Removes all temporary files after execution:
-  - build.gradle, settings.gradle, rewrite.yml
-  - .gradle/, gradle/, gradlew, gradlew.bat
-  - Ensures consuming repository remains clean of build tool artifacts
+### openrewrite-workflow.yml (Reusable Workflow)
 
-### Recipe Parameters Format
-- Recipe parameters use a **namespaced format**: `recipeName.parameterName=value`
-- Examples:
-  - Single option: `com.example.CreateFile.targetDirectory=kubernetes/instance-1`
-- Ensure complete cleanup of temporary files to avoid polluting the repository
+| Input | Required | Default | Description |
+|-------|----------|---------|-------------|
+| `recipes` | Yes | - | Comma-separated fully qualified recipe names (e.g., `com.example.FixKubernetesManifests`) |
+| `recipe-parameters` | No | - | Namespaced parameters: `recipeName.paramName=value` |
+| `recipes-dir` | No | `recipes` | Directory containing recipe YAML files |
+| `rewrite-dependencies` | No | - | OpenRewrite dependencies (e.g., `org.openrewrite:rewrite-yaml:8.37.1`) |
+| `java-version` | No | `17` | Java version to use |
+| `gradle-version` | No | `9.2.0` | Gradle version to use |
 
-### Best Practices
-- Use official OpenRewrite CLI or Docker images when available
-- Cache dependencies to improve performance
-- Support both GAV coordinates and custom recipe files
-- Include proper error handling and logging
-- Generate clear summaries for PR comments
-- Support dry-run mode for validation
+### openrewrite-runner (Action)
 
-### File Structure
-- `.github/workflows/` - Contains the reusable workflow definition(s)
-- `README.md` - Documentation for consumers of this workflow
-- Examples or templates for common use cases
+Same inputs as the reusable workflow. The action is called by the workflow and performs the actual OpenRewrite execution.
 
-### Integration Points
-- Should work with GitHub's dependency graph and security features
-- Support creating PRs with changes automatically
-- Integrate with GitHub Actions artifacts for change reports
-- Consider SARIF output for code scanning integration
+## Recipe Parameters Format
+
+Recipe parameters use a **namespaced format**: `recipeName.parameterName=value`
+
+**Examples:**
+- Single parameter: `com.example.CreateFile.targetDirectory=kubernetes/instance-1`
+- Multiple parameters: `com.example.Recipe1.param1=value1,com.example.Recipe2.param2=value2`
+- Wildcards: `com.example.FixKubernetesManifests.targetDirectory=examples/openrewrite/yaml/project-*`
+
+### Template Substitution
+
+Recipe YAML files can use template variables that get replaced at runtime:
+- Template format: `{{ parameterName }}` or `{{parameterName}}` (spaces optional)
+- Example in recipe: `filePattern: "{{ targetDirectory }}/manifests.yaml"`
+- Gets replaced with: `filePattern: "examples/openrewrite/yaml/project-blue/manifests.yaml"`
+
+The `process-recipes.sh` script handles substitution using sed with pattern: `{{ *paramName *}}`
+
+## Key Scripts
+
+### process-recipes.sh
+- **Purpose**: Loads recipe YAML files and substitutes parameters
+- **Inputs**: recipes-dir, comma-separated recipe names, recipe parameters
+- **Process**:
+  1. Parses recipe parameters into associative array
+  2. Finds recipe YAML files by matching the `name:` field
+  3. Substitutes `{{ paramName }}` templates with actual values
+  4. Writes combined recipes to `rewrite.yml` as separate YAML documents
+- **Output**: `rewrite.yml` with all recipes and substituted parameters
+
+### setup-gradle.sh
+- **Purpose**: Creates temporary Gradle build files
+- **Inputs**: comma-separated recipes, rewrite dependencies
+- **Process**:
+  1. Creates `settings.gradle` with project name
+  2. Generates `build.gradle` with:
+     - OpenRewrite Gradle plugin (version 6.25.0)
+     - Rewrite dependencies (if provided)
+     - `activeRecipe()` calls for each recipe
+     - `configFile = file("rewrite.yml")` configuration
+  3. Creates `src/main/java` directory (required by Gradle)
+- **Output**: `build.gradle`, `settings.gradle`, `src/` directory
+
+## Important Implementation Details
+
+### Permissions Required
+
+Calling workflows must grant these permissions:
+```yaml
+permissions:
+  contents: write
+  pull-requests: write
+```
+
+Repository must have "Allow GitHub Actions to create and approve pull requests" enabled in Settings → Actions → General.
+
+### Cleanup Process
+
+The action always cleans up temporary files in a dedicated step:
+- Removes: `settings.gradle`, `build.gradle`, `rewrite.yml`
+- Removes directories: `.gradle/`, `gradle/`, `src/`
+- Removes: `gradlew`, `gradlew.bat`
+
+This ensures no build tool artifacts remain in the repository.
+
+### Gradle Configuration
+
+- Uses Gradle Build Action for caching (`gradle/gradle-build-action@v3`)
+- Runs with `--no-daemon` to avoid background processes
+- Java version and Gradle version are configurable via inputs
 
 ## Common Tasks
-- Creating/updating the reusable workflow YAML
-- Adding new input parameters for flexibility
-- Improving error messages and user feedback
-- Adding examples for common OpenRewrite recipes
-- Writing documentation for workflow consumers
-- Testing workflow with different OpenRewrite recipe scenarios
+
+### Adding New Recipe Examples
+1. Create recipe YAML in `examples/openrewrite/recipes/`
+2. Add example files in `examples/openrewrite/yaml/`
+3. Document in example README
+4. Update default in `openrewrite-examples-run.yml` if appropriate
+
+### Debugging Workflows
+- Check `process-recipes.sh` output for parameter substitution logging
+- Look for `📄 rewrite.yml content:` in logs to verify substitution
+- Verify recipe files are found with `✅ Processing recipe:` messages
+- Check cleanup step to ensure all temporary files are removed
+
+### Updating OpenRewrite Version
+- Update the plugin version in `setup-gradle.sh`: `id 'org.openrewrite.rewrite' version 'X.Y.Z'`
+- Update default dependencies as needed
+
+## Troubleshooting
+
+### "Recipe not found" Error
+- Check recipe YAML has correct `name:` field matching the recipe name
+- Verify `recipes-dir` input points to correct directory
+- Ensure recipe YAML file exists and is valid
+
+### Template Variables Not Substituted
+- Verify parameter name matches template variable (case-sensitive)
+- Check namespacing: `recipeName.paramName=value`
+- Look for substitution log: `🔄 Substituted {{paramName}} with value`
+
+### PR Creation Failed
+- Check repository has "Allow GitHub Actions to create and approve pull requests" enabled
+- Verify permissions block includes `contents: write` and `pull-requests: write`
+- Check GITHUB_TOKEN has sufficient permissions
+
+### No Changes Detected
+- Verify recipe is actually making changes (test locally with OpenRewrite)
+- Check file patterns match target files
+- Ensure recipe dependencies are included in `rewrite-dependencies` input
+
+## Best Practices
+
+- Always use namespaced parameters for recipe configuration
+- Test recipes with wildcard patterns when targeting multiple directories
+- Keep recipe YAML files simple and focused on one transformation
+- Document recipe parameters in the recipe YAML description
+- Use meaningful recipe names that describe the transformation
+- Clean up is automatic - don't manually remove temporary files in recipes
 
 ## OpenRewrite Specifics
+
 - Recipes are identified by fully qualified names (e.g., `org.openrewrite.java.format.AutoFormat`)
-- Recipes can be composed and configured via YAML files
-- Active recipes can come from various OpenRewrite modules (Java, Maven, Spring, etc.)
-- Consider supporting custom recipe JARs via URL or artifact coordinates
+- Recipes can be composed using `recipeList` in YAML
+- Active recipes can come from various OpenRewrite modules (Java, Maven, Spring, YAML, JSON, etc.)
+- Custom recipes can be defined in YAML files in the `recipes-dir`
+- Recipe dependencies must be provided via `rewrite-dependencies` input if not using default
 
 ## Target Audience
+
 Developers who want to:
 - Apply consistent code style and refactorings across repositories
-- Automate framework migrations (e.g., Spring Boot, JUnit upgrades)
+- Automate framework migrations (Spring Boot, JUnit upgrades, etc.)
 - Fix security vulnerabilities through automated patches
+- Transform YAML/JSON configuration files at scale
 - Maintain code quality without local build tool setup
+
