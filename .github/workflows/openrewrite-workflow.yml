@@ -31,10 +31,10 @@ on:
         required: false
         default: '9.2.0'
       openrewrite-version:
-        description: 'OpenRewrite plugin version to use (default: 8.66.3)'
+        description: 'OpenRewrite plugin version to use (default: 7.20.0)'
         type: string
         required: false
-        default: '8.66.3'
+        default: '7.20.0'
 
 jobs:
   openrewrite:

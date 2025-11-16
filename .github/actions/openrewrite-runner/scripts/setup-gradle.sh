@@ -3,7 +3,7 @@ set -e
 
 RECIPES="$1"
 REWRITE_DEPS="$2"
-OPENREWRITE_VERSION="${3:-8.66.3}"
+OPENREWRITE_VERSION="${3:-7.20.0}"
 
 mkdir -p src/main/java
 

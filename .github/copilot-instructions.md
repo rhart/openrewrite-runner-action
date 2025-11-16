@@ -64,11 +64,26 @@ README.md                              # Main project documentation
 | `rewrite-dependencies` | No | - | OpenRewrite dependencies (e.g., `org.openrewrite:rewrite-yaml:8.66.3`) |
 | `java-version` | No | `17` | Java version to use |
 | `gradle-version` | No | `9.2.0` | Gradle version to use |
-| `openrewrite-version` | No | `8.66.3` | OpenRewrite plugin version to use |
+| `openrewrite-version` | No | `7.20.0` | OpenRewrite Gradle plugin version to use |
 
 ### openrewrite-runner (Action)
 
 Same inputs as the reusable workflow. The action is called by the workflow and performs the actual OpenRewrite execution.
+
+## OpenRewrite Versioning
+
+**Important**: OpenRewrite has two separate version numbers:
+
+1. **Gradle Plugin Version** (e.g., `7.20.0`) - Used in `build.gradle` for the plugin
+2. **Library/Module Version** (e.g., `8.66.3`) - Used for dependencies like `rewrite-yaml`, `rewrite-java`, etc.
+
+The Gradle plugin version 7.x is compatible with library version 8.x. This is normal and expected.
+
+**Example of correct usage:**
+```yaml
+openrewrite-version: "7.20.0"              # Gradle plugin version
+rewrite-dependencies: "org.openrewrite:rewrite-yaml:8.66.3"  # Library version
+```
 
 ## Recipe Parameters Format
 

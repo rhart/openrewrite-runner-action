@@ -71,7 +71,7 @@ Go to **Actions** → **OpenRewrite** → **Run workflow** and provide:
 | `rewrite-dependencies` | No | - | OpenRewrite dependencies (e.g., `org.openrewrite:rewrite-yaml:8.66.3`) |
 | `java-version` | No | `17` | Java version to use |
 | `gradle-version` | No | `9.2.0` | Gradle version to use |
-| `openrewrite-version` | No | `8.66.3` | OpenRewrite plugin version to use |
+| `openrewrite-version` | No | `7.20.0` | OpenRewrite Gradle plugin version to use |
 
 ## Recipe Parameters
 

@@ -27,7 +27,7 @@ inputs:
   openrewrite-version:
     description: 'OpenRewrite plugin version to use'
     required: false
-    default: '8.66.3'
+    default: '7.20.0'
 
 outputs:
   changes-detected:
