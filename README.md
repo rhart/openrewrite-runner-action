@@ -73,6 +73,30 @@ Go to **Actions** → **OpenRewrite** → **Run workflow** and provide:
 | `gradle-version` | No | `9.2.0` | Gradle version to use |
 | `openrewrite-version` | No | `7.20.0` | OpenRewrite Gradle plugin version to use |
 
+## OpenRewrite Versions Explained
+
+OpenRewrite uses distinct version lines for its Gradle plugin and its libraries (modules). It is normal for these numbers to differ:
+
+- **Gradle Plugin Version** (input: `openrewrite-version`) – Controls the OpenRewrite Gradle plugin applied in `build.gradle`.
+- **Library / Module Versions** (input: `rewrite-dependencies`) – Individual artifacts like `rewrite-yaml`, `rewrite-java`, etc.
+
+Compatibility note: Plugin 7.x is designed to work with 8.x library releases. You do *not* need matching numeric versions. Choose:
+
+- The plugin version based on plugin release notes / features you need.
+- Module versions based on the transformations you require (e.g., latest `rewrite-yaml` for YAML recipes).
+
+When to align versions exactly:
+- If you stay within a single release train for auditing or reproducibility, you can pin both to the same major/minor if that train exists (e.g., all 8.x once a plugin 8.x line is published).
+
+When differing versions is fine:
+- Using `openrewrite-version: 7.20.0` with `rewrite-yaml:8.66.3` is expected and supported.
+
+Best practice:
+- Pin versions explicitly (avoid `+` or dynamic versions) for repeatable refactors.
+- Update module versions when new recipes or fixes are needed; update the plugin less frequently unless new plugin features matter.
+
+If you encounter incompatibilities (rare), upgrade the plugin first, then adjust module versions.
+
 ## Recipe Parameters
 
 Use **namespaced format** to pass parameters to recipes:

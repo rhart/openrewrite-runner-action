@@ -32,23 +32,23 @@ This is a reusable GitHub Actions workflow for running OpenRewrite recipes witho
 .github/
   workflows/
     openrewrite-workflow.yml          # Main reusable workflow
-    openrewrite-run.yml                # Manual test workflow
-    openrewrite-examples-run.yml       # Example runner with defaults
+    openrewrite-run.yml               # Manual test workflow
+    openrewrite-examples-run.yml      # Example runner with defaults
   actions/
     openrewrite-runner/
-      action.yml                       # Composite action definition
+      action.yml                      # Composite action definition
       scripts/
-        process-recipes.sh             # Handles recipe loading and parameter substitution
-        setup-gradle.sh                # Creates temporary Gradle build files
-  copilot-instructions.md              # This file
+        process-recipes.sh            # Handles recipe loading and parameter substitution
+        setup-gradle.sh               # Creates temporary Gradle build files
+  copilot-instructions.md             # This file
 examples/
   openrewrite/
     recipes/
-      fix-kubernetes-manifests.yml     # Example recipe definition
+      fix-kubernetes-manifests.yml    # Example recipe definition
     yaml/
-      project-blue/manifests.yaml      # Example YAML file to transform
-      project-green/manifests.yaml     # Example YAML file to transform
-      README.md                        # Example documentation
+      project-blue/manifests.yaml     # Example YAML file to transform
+      project-green/manifests.yaml    # Example YAML file to transform
+      README.md                       # Example documentation
 README.md                              # Main project documentation
 ```
 
@@ -70,20 +70,33 @@ README.md                              # Main project documentation
 
 Same inputs as the reusable workflow. The action is called by the workflow and performs the actual OpenRewrite execution.
 
-## OpenRewrite Versioning
+## OpenRewrite Versioning & Compatibility
 
-**Important**: OpenRewrite has two separate version numbers:
+OpenRewrite uses *two* distinct version lines that may legitimately differ:
 
-1. **Gradle Plugin Version** (e.g., `7.20.0`) - Used in `build.gradle` for the plugin
-2. **Library/Module Version** (e.g., `8.66.3`) - Used for dependencies like `rewrite-yaml`, `rewrite-java`, etc.
+1. **Gradle Plugin Version** (e.g., `7.20.0`) – Applied via `id 'org.openrewrite.rewrite' version 'X.Y.Z'` in `build.gradle`.
+2. **Module / Library Versions** (e.g., `8.66.3`) – Individual artifacts such as `rewrite-yaml`, `rewrite-java`, `rewrite-maven`, etc.
 
-The Gradle plugin version 7.x is compatible with library version 8.x. This is normal and expected.
+It is normal for the Gradle plugin to be on a 7.x line while libraries are on 8.x. The plugin provides integration and task wiring; the libraries contain the recipes. Plugin 7.x is compatible with 8.x libraries.
 
-**Example of correct usage:**
+**Example of valid mixed versions:**
 ```yaml
-openrewrite-version: "7.20.0"              # Gradle plugin version
-rewrite-dependencies: "org.openrewrite:rewrite-yaml:8.66.3"  # Library version
+openrewrite-version: "7.20.0"                       # Gradle plugin
+rewrite-dependencies: "org.openrewrite:rewrite-yaml:8.66.3"  # Library
 ```
+
+### When to keep versions the same
+- If a future 8.x plugin line exists and you want full release-train alignment for reproducibility/audits.
+- If troubleshooting a suspected compatibility issue—temporarily align versions to rule out version skew.
+
+### When differing versions are preferred
+- Most day-to-day usage: choose latest stable libraries for newest recipes; update the plugin less frequently.
+
+### Best practices
+- Pin explicit versions (avoid dynamic `+`).
+- Upgrade libraries to access new or fixed recipes.
+- Upgrade the plugin only when new task behaviors or configuration improvements are needed.
+- If an incompatibility arises (rare), bump the plugin first, then modules.
 
 ## Recipe Parameters Format
 
@@ -101,7 +114,7 @@ Recipe YAML files can use template variables that get replaced at runtime:
 - Example in recipe: `filePattern: "{{ targetDirectory }}/manifests.yaml"`
 - Gets replaced with: `filePattern: "examples/openrewrite/yaml/project-blue/manifests.yaml"`
 
-The `process-recipes.sh` script handles substitution using sed with pattern: `{{ *paramName *}}`
+The `process-recipes.sh` script handles substitution using a sed pattern that tolerates optional spaces.
 
 ## Key Scripts
 
@@ -109,19 +122,19 @@ The `process-recipes.sh` script handles substitution using sed with pattern: `{{
 - **Purpose**: Loads recipe YAML files and substitutes parameters
 - **Inputs**: recipes-dir, comma-separated recipe names, recipe parameters
 - **Process**:
-  1. Parses recipe parameters into associative array
+  1. Parses recipe parameters into an associative array
   2. Finds recipe YAML files by matching the `name:` field
-  3. Substitutes `{{ paramName }}` templates with actual values
+  3. Safely substitutes `{{ paramName }}` templates (sed-escaped)
   4. Writes combined recipes to `rewrite.yml` as separate YAML documents
 - **Output**: `rewrite.yml` with all recipes and substituted parameters
 
 ### setup-gradle.sh
 - **Purpose**: Creates temporary Gradle build files
-- **Inputs**: comma-separated recipes, rewrite dependencies
+- **Inputs**: comma-separated recipes, rewrite dependencies, plugin version
 - **Process**:
   1. Creates `settings.gradle` with project name
   2. Generates `build.gradle` with:
-     - OpenRewrite Gradle plugin (version 6.25.0)
+     - OpenRewrite Gradle plugin (version 7.20.0 by default)
      - Rewrite dependencies (if provided)
      - `activeRecipe()` calls for each recipe
      - `configFile = file("rewrite.yml")` configuration
@@ -129,28 +142,6 @@ The `process-recipes.sh` script handles substitution using sed with pattern: `{{
 - **Output**: `build.gradle`, `settings.gradle`, `src/` directory
 
 ## Important Implementation Details
-
-### Version Alignment
-
-**Critical**: OpenRewrite dependency versions should match the OpenRewrite plugin version.
-
-- OpenRewrite modules (`rewrite-yaml`, `rewrite-java`, `rewrite-json`, etc.) are released together
-- Using mismatched versions can cause runtime errors, missing features, or incompatibilities
-- When specifying `rewrite-dependencies`, ensure the version matches `openrewrite-version`
-
-**Example - Correct alignment:**
-```yaml
-openrewrite-version: "6.25.0"
-rewrite-dependencies: "org.openrewrite:rewrite-yaml:6.25.0"
-```
-
-**Example - Incorrect (version mismatch):**
-```yaml
-openrewrite-version: "6.25.0"
-rewrite-dependencies: "org.openrewrite:rewrite-yaml:8.37.1"  # ❌ Wrong!
-```
-
-**Best Practice**: When updating `openrewrite-version`, update all dependency versions to match.
 
 ### Permissions Required
 
@@ -192,9 +183,9 @@ This ensures no build tool artifacts remain in the repository.
 - Verify recipe files are found with `✅ Processing recipe:` messages
 - Check cleanup step to ensure all temporary files are removed
 
-### Updating OpenRewrite Version
-- Update the plugin version in `setup-gradle.sh`: `id 'org.openrewrite.rewrite' version 'X.Y.Z'`
-- Update default dependencies as needed
+### Updating OpenRewrite Versions
+- Update the plugin version in workflow inputs or `setup-gradle.sh` default.
+- Update module versions in `rewrite-dependencies` to pick up new recipes/fixes.
 
 ## Troubleshooting
 
@@ -209,23 +200,21 @@ This ensures no build tool artifacts remain in the repository.
 - Look for substitution log: `🔄 Substituted {{paramName}} with value`
 
 ### PR Creation Failed
-- Check repository has "Allow GitHub Actions to create and approve pull requests" enabled
+- Check repository has required PR permissions enabled
 - Verify permissions block includes `contents: write` and `pull-requests: write`
-- Check GITHUB_TOKEN has sufficient permissions
 
 ### No Changes Detected
-- Verify recipe is actually making changes (test locally with OpenRewrite)
+- Verify recipe makes a transformation (test locally)
 - Check file patterns match target files
-- Ensure recipe dependencies are included in `rewrite-dependencies` input
+- Ensure relevant module (e.g., `rewrite-yaml`) is included via `rewrite-dependencies`
 
 ## Best Practices
 
 - Always use namespaced parameters for recipe configuration
-- Test recipes with wildcard patterns when targeting multiple directories
-- Keep recipe YAML files simple and focused on one transformation
-- Document recipe parameters in the recipe YAML description
-- Use meaningful recipe names that describe the transformation
-- Clean up is automatic - don't manually remove temporary files in recipes
+- Pin versions for reproducibility
+- Keep recipe YAML files focused and documented
+- Use wildcards to batch similar target directories
+- Rely on automatic cleanup—don't manually delete build files in recipes
 
 ## OpenRewrite Specifics
 

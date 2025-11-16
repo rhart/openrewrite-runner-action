@@ -1,33 +1,35 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-RECIPES="$1"
-REWRITE_DEPS="$2"
+RECIPES="${1:-}"
+REWRITE_DEPS="${2:-}"
 OPENREWRITE_VERSION="${3:-7.20.0}"
+
+[ -z "${RECIPES}" ] && { echo "❌ No recipes provided" >&2; exit 1; }
+[ -z "${OPENREWRITE_VERSION}" ] && { echo "❌ OpenRewrite plugin version is empty" >&2; exit 1; }
 
 mkdir -p src/main/java
 
-# Simple settings.gradle without unnecessary plugins
 cat > settings.gradle << 'EOF'
 rootProject.name = 'openrewrite-temp'
 EOF
 
-# Build dependencies block only if dependencies are provided
+# Dependencies block only if provided
 DEPS_BLOCK=""
-if [ -n "$REWRITE_DEPS" ]; then
-  IFS=',' read -r -a DEP_ARRAY <<< "$REWRITE_DEPS"
+if [ -n "${REWRITE_DEPS}" ]; then
+  IFS=',' read -r -a DEP_ARRAY <<< "${REWRITE_DEPS}"
   for dep in "${DEP_ARRAY[@]}"; do
-    dep_trim=$(echo "$dep" | xargs)
-    [ -n "$dep_trim" ] && DEPS_BLOCK="${DEPS_BLOCK}    rewrite(\"${dep_trim}\")\n"
+    dep_trim=$(echo "${dep}" | xargs)
+    [ -n "${dep_trim}" ] && DEPS_BLOCK+="    rewrite(\"${dep_trim}\")\n"
   done
 fi
 
-# Convert comma-separated recipes to individual activeRecipe calls
-IFS=',' read -r -a RECIPE_ARRAY <<< "$RECIPES"
+# Active recipes lines
 ACTIVE_RECIPES=""
+IFS=',' read -r -a RECIPE_ARRAY <<< "${RECIPES}"
 for recipe in "${RECIPE_ARRAY[@]}"; do
-  recipe_trim=$(echo "$recipe" | xargs)
-  [ -n "$recipe_trim" ] && ACTIVE_RECIPES="${ACTIVE_RECIPES}    activeRecipe(\"${recipe_trim}\")\n"
+  recipe_trim=$(echo "${recipe}" | xargs)
+  [ -n "${recipe_trim}" ] && ACTIVE_RECIPES+="    activeRecipe(\"${recipe_trim}\")\n"
 done
 
 cat > build.gradle << EOF
@@ -39,15 +41,13 @@ plugins {
 repositories { mavenCentral() }
 
 dependencies {
-$(echo -e "$DEPS_BLOCK")
-}
+$(echo -e "${DEPS_BLOCK}")}
 
 rewrite {
     configFile = file("rewrite.yml")
-$(echo -e "$ACTIVE_RECIPES")
-}
+$(echo -e "${ACTIVE_RECIPES}")}
 EOF
 
 echo "🔍 build.gradle:"
 sed 's/^/     /' build.gradle
-echo "✅ Gradle build files created!"
+echo "✅ Gradle build files created"
