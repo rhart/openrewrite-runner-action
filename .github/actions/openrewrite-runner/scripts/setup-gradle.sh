@@ -38,7 +38,10 @@ plugins {
     id 'org.openrewrite.rewrite' version '${OPENREWRITE_VERSION}'
 }
 
-repositories { mavenCentral() }
+repositories {
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") }
+}
 
 dependencies {
 $(echo -e "${DEPS_BLOCK}")}
