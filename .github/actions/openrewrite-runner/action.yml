@@ -1,0 +1,108 @@
+name: 'OpenRewrite Runner'
+description: 'Runs OpenRewrite recipes using a temporary Gradle setup without requiring build tool configuration in the target repository'
+author: 'rhart'
+
+inputs:
+  recipes:
+    description: 'Comma-separated list of recipe names (single or multiple). Example: com.example.FixKubernetesManifests,com.example.UpdateReplicas'
+    required: true
+  recipe-parameters:
+    description: 'Comma-separated key=value pairs for recipe parameters in namespaced format. Format: "recipeName.parameterName=value". Example: "com.example.CreateFile.targetDirectory=kubernetes/instance-1"'
+    required: false
+  recipes-dir:
+    description: 'Directory containing recipe YAML files'
+    required: false
+    default: 'recipes'
+  rewrite-dependencies:
+    description: 'Comma-separated list of OpenRewrite dependencies. Example: org.openrewrite:rewrite-yaml:8.37.1,org.openrewrite:rewrite-json:8.37.0'
+    required: false
+  java-version:
+    description: 'Java version to use'
+    required: false
+    default: '17'
+  gradle-version:
+    description: 'Gradle version to use'
+    required: false
+    default: '9.2.0'
+  openrewrite-version:
+    description: 'OpenRewrite plugin version to use'
+    required: false
+    default: '7.20.0'
+
+outputs:
+  changes-detected:
+    description: 'Whether OpenRewrite made any changes'
+    value: ${{ steps.check_changes.outputs.changes }}
+  activated-recipes:
+    description: 'Comma-separated list of activated recipes'
+    value: ${{ steps.process_recipes.outputs.activated_recipes }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Ensure scripts are executable
+      shell: bash
+      run: |
+        chmod +x ${{ github.action_path }}/scripts/*.sh
+
+    - name: Set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: 'temurin'
+
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v3
+      with:
+        gradle-version: ${{ inputs.gradle-version }}
+        cache-read-only: false
+
+    - name: Process recipes and setup Gradle project
+      id: process_recipes
+      shell: bash
+      run: |
+        RECIPES_CLEAN=$(echo "${{ inputs.recipes }}" | tr -d ' ')
+        echo "🔧 Activating recipes: $RECIPES_CLEAN"
+
+        "${{ github.action_path }}/scripts/process-recipes.sh" \
+          "${{ inputs.recipes-dir }}" \
+          "$RECIPES_CLEAN" \
+          "${{ inputs.recipe-parameters }}"
+
+        # Show complete rewrite.yml content after recipes are added
+        echo "📄 rewrite.yml content:"; sed 's/^/   /' rewrite.yml
+
+        # Setup Gradle wrapper and build files
+        "${{ github.action_path }}/scripts/setup-gradle.sh" \
+          "$RECIPES_CLEAN" \
+          "${{ inputs.rewrite-dependencies }}" \
+          "${{ inputs.openrewrite-version }}"
+
+    - name: Run OpenRewrite
+      shell: bash
+      run: |
+        echo "▶ Running OpenRewrite using configFile rewrite.yml"
+        gradle rewriteRun --no-daemon || { echo "❌ rewriteRun failed" >&2; exit 1; }
+
+    - name: Clean up temporary Gradle files
+      shell: bash
+      run: |
+        rm -f settings.gradle build.gradle rewrite.yml
+        rm -rf .gradle gradle src
+        rm -f gradlew gradlew.bat
+
+    - name: Check for changes
+      id: check_changes
+      shell: bash
+      run: |
+        if [[ -n $(git status --porcelain) ]]; then
+          echo "changes=true" >> $GITHUB_OUTPUT
+          echo "✅ Changes detected"
+        else
+          echo "changes=false" >> $GITHUB_OUTPUT
+          echo "ℹ️  No changes detected"
+        fi
+
+branding:
+  icon: 'refresh-cw'
+  color: 'green'
