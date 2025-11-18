@@ -12,22 +12,21 @@ recipeList:
 
   - com.anacoders.cookbook.CreateYamlFilesByPattern:
       filePattern: "examples/openrewrite/yaml/project-blue/contour.yaml"
-      fileContents: |
-        apiVersion: kustomize.toolkit.fluxcd.io/v1
-        kind: Kustomization
-        metadata:
-          name: contour
-          namespace: flux-system
-        spec:
-          interval: 10m0s
-          dependsOn:
-            - name: crds
-            - name: infrastructure
-          sourceRef:
-            kind: GitRepository
-            name: flux-system
-          path: ./infrastructure/base/contour/prod
-          prune: true
-          postBuild:
-            substitute:
-              additionalTags: gradle-environment=\\${environment:=unset},gradle-owner=dv-infrastructure-team,gradle-iac-tool=k8s,gradle-cost-center=2200,gradle-tagging-version=2,gradle-application=contour
+      fileContents: "apiVersion: kustomize.toolkit.fluxcd.io/v1\n
+kind: Kustomization\n
+metadata:\n
+  name: contour\n
+  namespace: flux-system\n
+spec:\n
+  interval: 10m0s\n
+  dependsOn:\n
+    - name: crds\n
+    - name: infrastructure\n
+  sourceRef:\n
+    kind: GitRepository\n
+    name: flux-system\n
+  path: ./infrastructure/base/contour/prod\n
+  prune: true\n
+  postBuild:\n
+    substitute:\n
+      additionalTags: gradle-environment=\${environment:=unset},gradle-owner=dv-infrastructure-team,gradle-iac-tool=k8s,gradle-cost-center=2200,gradle-tagging-version=2,gradle-application=contour"
