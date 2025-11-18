@@ -29,4 +29,4 @@ spec:\n
   prune: true\n
   postBuild:\n
     substitute:\n
-      additionalTags: gradle-environment=\${environment:=unset},gradle-owner=dv-infrastructure-team,gradle-iac-tool=k8s,gradle-cost-center=2200,gradle-tagging-version=2,gradle-application=contour"
+      additionalTags: gradle-environment=\u0024${environment:=unset},gradle-owner=dv-infrastructure-team,gradle-iac-tool=k8s,gradle-cost-center=2200,gradle-tagging-version=2,gradle-application=contour"
