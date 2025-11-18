@@ -67,17 +67,17 @@ for SELECTED_RECIPE in "${RECIPE_ARRAY[@]}"; do
   recipe_content=$(<"${RECIPE_FILE}")
 
   # Substitute parameters for this recipe
-  for param_key in "${!params[@]}"; do
-    if [[ "${param_key}" =~ ^${SELECTED_RECIPE_TRIM}\.(.+)$ ]]; then
-      param_name="${BASH_REMATCH[1]}"
-      param_value="${params[${param_key}]}"
-      escaped_value=$(escape_sed "${param_value}")
-      # Perform safe substitution
-      recipe_content=$(printf '%s' "${recipe_content}" | sed "s|{{ *${param_name} *}}|${escaped_value}|g")
-      echo "  🔄 Substituted {{${param_name}}} with ${param_value}"
-      used_params["${param_key}"]=1
-    fi
-  done
+#  for param_key in "${!params[@]}"; do
+#    if [[ "${param_key}" =~ ^${SELECTED_RECIPE_TRIM}\.(.+)$ ]]; then
+#      param_name="${BASH_REMATCH[1]}"
+#      param_value="${params[${param_key}]}"
+#      escaped_value=$(escape_sed "${param_value}")
+#      # Perform safe substitution
+#      recipe_content=$(printf '%s' "${recipe_content}" | sed "s|{{ *${param_name} *}}|${escaped_value}|g")
+#      echo "  🔄 Substituted {{${param_name}}} with ${param_value}"
+#      used_params["${param_key}"]=1
+#    fi
+#  done
 
   # Append recipe definition as separate document
   echo "---" >> rewrite.yml
