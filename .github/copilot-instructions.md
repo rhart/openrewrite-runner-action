@@ -137,7 +137,7 @@ The `process-recipes.sh` script handles substitution using a sed pattern that to
      - OpenRewrite Gradle plugin (version 7.20.0 by default)
      - Rewrite dependencies (if provided)
      - `activeRecipe()` calls for each recipe
-     - `configFile = file("rewrite.yml")` configuration
+     - `configFile = file('rewrite.yml')` configuration
   3. Creates `src/main/java` directory (required by Gradle)
 - **Output**: `build.gradle`, `settings.gradle`, `src/` directory
 
