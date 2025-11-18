@@ -30,4 +30,4 @@ recipeList:
           prune: true
           postBuild:
             substitute:
-              additionalTags: gradle-environment=${environment},gradle-owner=dv-infrastructure-team,gradle-iac-tool=k8s,gradle-cost-center=2200,gradle-tagging-version=2,gradle-application=contour
+              additionalTags: gradle-environment=${environment:=unset},gradle-owner=dv-infrastructure-team,gradle-iac-tool=k8s,gradle-cost-center=2200,gradle-tagging-version=2,gradle-application=contour
