@@ -51,7 +51,7 @@ jobs:
 
       - name: Run OpenRewrite
         id: openrewrite
-        uses: rhart/openrewrite-workflow/.github/actions/openrewrite-runner@main
+        uses: rhart/openrewrite-workflow/.github/actions/openrewrite-runner@rhart/debug
         with:
           recipes: ${{ inputs.recipes }}
           recipe-parameters: ${{ inputs.recipe-parameters }}
