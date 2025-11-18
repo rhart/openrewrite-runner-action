@@ -82,7 +82,7 @@ runs:
       shell: bash
       run: |
         echo "▶ Running OpenRewrite using configFile rewrite.yml"
-        gradle rewriteRun --no-daemon -Denvironment-DEV || { echo "❌ rewriteRun failed" >&2; exit 1; }
+        gradle rewriteRun --no-daemon || { echo "❌ rewriteRun failed" >&2; exit 1; }
 
     - name: Clean up temporary Gradle files
       shell: bash
