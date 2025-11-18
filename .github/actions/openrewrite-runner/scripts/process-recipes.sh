@@ -80,7 +80,8 @@ for SELECTED_RECIPE in "${RECIPE_ARRAY[@]}"; do
   done
 
   # Escape dollar signs to prevent Gradle property interpolation
-  recipe_content=$(printf '%s' "${recipe_content}" | sed 's/\$/\\$/g')
+  # Use $$ instead of \$ - Gradle treats $$ as a literal $
+  recipe_content=$(printf '%s' "${recipe_content}" | sed 's/\$/\$\$/g')
 
   # Append recipe definition as separate document
   echo "---" >> rewrite.yml
