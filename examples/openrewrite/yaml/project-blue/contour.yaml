@@ -1,0 +1,18 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: contour
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  dependsOn:
+    - name: crds
+    - name: infrastructure
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./infrastructure/base/contour/prod
+  prune: true
+  postBuild:
+    substitute:
+      additionalTags: gradle-environment=${environment},gradle-owner=dv-infrastructure-team,gradle-iac-tool=k8s,gradle-cost-center=2200,gradle-tagging-version=2,gradle-application=contour
