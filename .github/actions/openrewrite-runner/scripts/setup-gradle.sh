@@ -47,7 +47,7 @@ dependencies {
 $(echo -e "${DEPS_BLOCK}")}
 
 rewrite {
-    configFile = file('rewrite.yml')
+    configFile = file('rewrite-test.yml')
 $(echo -e "${ACTIVE_RECIPES}")}
 EOF
 
