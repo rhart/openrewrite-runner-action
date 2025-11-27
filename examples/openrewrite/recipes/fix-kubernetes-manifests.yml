@@ -12,9 +12,11 @@ recipeList:
 
   - com.anacoders.cookbook.yaml.ChangeYamlPropertyConditionally:
       conditions:
+        - jsonPath: $.kind
+          value: Deployment
         - jsonPath: $.metadata.name
           value: hello-kubernetes
-      targetJsonPath: $.spec.replicas
-      oldValuePattern: "(.*)"
-      newValue: "4$1"
+      targetJsonPath: $.spec.selector.matchLabels.foo
+      oldValuePattern: "(.*-)[0-9]+\\.[0-9]+(-.*)"
+      newValue: "$15.4$2"
       filePattern: "{{ targetDirectory }}/manifests.yaml"
