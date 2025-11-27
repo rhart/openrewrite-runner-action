@@ -11,9 +11,10 @@ recipeList:
       filePattern: "{{ targetDirectory }}/manifests.yaml"
 
   - org.openrewrite.yaml.ChangePropertyValue:
-      propertyKey: $.spec.replicas
+      propertyKey: spec.replicas
       newValue: 55
       oldValue: 3
+      regex: false
       filePattern: "{{ targetDirectory }}/manifests.yaml"
 
 #  - com.anacoders.cookbook.yaml.ChangeYamlPropertyConditionally:
