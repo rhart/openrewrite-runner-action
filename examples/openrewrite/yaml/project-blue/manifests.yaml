@@ -19,4 +19,4 @@ spec:
   selector:
     matchLabels:
       app: hello-kubernetes
-      foo: firstPart-1.2-secondPart
+      foo: firstPart-1-secondPart
