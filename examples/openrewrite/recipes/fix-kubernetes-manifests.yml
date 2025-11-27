@@ -25,5 +25,5 @@ recipeList:
           value: hello-kubernetes
       targetJsonPath: spec.replicas
       oldValuePattern: "3"
-      newValue: "55"
+      newValue: "555"
       filePattern: "{{ targetDirectory }}/manifests.yaml"
