@@ -17,6 +17,6 @@ recipeList:
         - jsonPath: $.metadata.name
           value: hello-kubernetes
       targetJsonPath: $.spec.replicas
-      #oldValuePattern: "(3)"
-      newValue: "5"
+      oldValuePattern: "(3)"
+      newValue: "55"
       filePattern: "{{ targetDirectory }}/manifests.yaml"
