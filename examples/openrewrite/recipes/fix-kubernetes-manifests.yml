@@ -10,13 +10,19 @@ recipeList:
       oldValue: goodbye-kubernetes
       filePattern: "{{ targetDirectory }}/manifests.yaml"
 
-  - com.anacoders.cookbook.yaml.ChangeYamlPropertyConditionally:
-      conditions:
-        - jsonPath: $.kind
-          value: Deployment
-        - jsonPath: $.metadata.name
-          value: hello-kubernetes
-      targetJsonPath: $.spec.replicas
-      oldValuePattern: "3"
-      newValue: "55"
+  - org.openrewrite.yaml.ChangePropertyValue:
+      propertyKey: $.spec.replicas
+      newValue: 55
+      oldValue: 3
       filePattern: "{{ targetDirectory }}/manifests.yaml"
+
+#  - com.anacoders.cookbook.yaml.ChangeYamlPropertyConditionally:
+#      conditions:
+#        - jsonPath: $.kind
+#          value: Deployment
+#        - jsonPath: $.metadata.name
+#          value: hello-kubernetes
+#      targetJsonPath: $.spec.replicas
+#      oldValuePattern: "3"
+#      newValue: "55"
+#      filePattern: "{{ targetDirectory }}/manifests.yaml"
