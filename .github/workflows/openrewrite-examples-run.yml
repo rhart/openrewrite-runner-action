@@ -21,6 +21,6 @@ jobs:
     secrets: inherit
     with:
       recipes-dir: "examples/openrewrite/recipes"
-      rewrite-dependencies: "org.openrewrite:rewrite-yaml:8.66.3,com.github.rhart:openrewrite-cookbook:v0.3.0"
+      rewrite-dependencies: "org.openrewrite:rewrite-yaml:8.66.3,com.github.rhart:openrewrite-cookbook:main-SNAPSHOT"
       recipes: ${{ github.event.inputs.recipes }}
       recipe-parameters: ${{ github.event.inputs.recipe-parameters }}

@@ -20,6 +20,7 @@ recipeList:
   - com.anacoders.cookbook.yaml.ChangeYamlPropertyConditionally:
       conditions: []
       targetJsonPath: spec.replicas
-      oldValuePattern: "3"
+      oldValue: "3"
       newValue: "555"
+      regex: false
       filePattern: "{{ targetDirectory }}/manifests.yaml"
