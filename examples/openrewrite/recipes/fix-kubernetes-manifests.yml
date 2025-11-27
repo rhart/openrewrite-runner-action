@@ -14,6 +14,8 @@ recipeList:
       conditions:
         - jsonPath: $.kind
           value: Deployment
+        - jsonPath: $.metadata.name
+          value: hello-kubernetes
       targetJsonPath: $.spec.replicas
       oldValuePattern: "(.*)"
       newValue: "4$1"
