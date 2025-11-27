@@ -12,8 +12,8 @@ recipeList:
 
   - org.openrewrite.yaml.ChangePropertyValue:
       propertyKey: spec.replicas
-      newValue: 556
-      oldValue: (3)
+      newValue: "557"
+      oldValue: "(3)"
       regex: true
       filePattern: "{{ targetDirectory }}/manifests.yaml"
 
