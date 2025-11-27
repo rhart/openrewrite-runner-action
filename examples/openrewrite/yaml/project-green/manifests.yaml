@@ -8,14 +8,14 @@ spec:
     - port: 80
       targetPort: 8080
   selector:
-    app: goodbye-kubernetes
+    app: hello-kubernetes
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-kubernetes
 spec:
-  replicas: 3
+  replicas: 43
   selector:
     matchLabels:
       app: hello-kubernetes
