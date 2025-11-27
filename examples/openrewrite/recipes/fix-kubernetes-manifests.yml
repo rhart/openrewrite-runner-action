@@ -18,10 +18,13 @@ recipeList:
 #      filePattern: "{{ targetDirectory }}/manifests.yaml"
 
   - com.anacoders.cookbook.yaml.ChangeYamlPropertyConditionally:
-      conditionKey: kind
-      conditionValue: Deployment
+      conditions:
+        - key: kind
+          value: Deployment
+        - key: metadata.name
+          value: hello-kubernetes
       propertyKey: spec.replicas
-      newValue: "997$1"
+      newValue: "117$1"
       oldValue: "(3)"
       regex: true
       filePattern: "{{ targetDirectory }}/manifests.yaml"
