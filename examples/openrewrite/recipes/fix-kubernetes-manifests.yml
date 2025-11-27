@@ -9,3 +9,9 @@ recipeList:
       newValue: hello-kubernetes
       oldValue: goodbye-kubernetes
       filePattern: "{{ targetDirectory }}/manifests.yaml"
+
+  - com.anacoders.cookbook.yaml.ChangeYamlPropertyConditionally:
+      targetJsonPath: $.spec.replicas
+      oldValuePattern: "(.*)"
+      newValue: "4$1"
+      filePattern: "{{ targetDirectory }}/manifests.yaml"
