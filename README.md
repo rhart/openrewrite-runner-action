@@ -26,7 +26,7 @@ A GitHub Action that runs [OpenRewrite](https://docs.openrewrite.org/) recipes w
 |-------|----------|---------|-------------|
 | `recipes` | Yes | - | Comma-separated recipe names |
 | `recipe-parameters` | No | - | Parameters in format `recipeName.paramName=value` |
-| `recipes-dir` | No | `recipes` | Directory containing recipe YAML files |
+| `recipes-dir` | No | `recipes` | Directory containing recipe YAML files (searches subdirectories) |
 | `rewrite-dependencies` | No | - | Comma-separated OpenRewrite dependencies |
 | `java-version` | No | `17` | Java version to use |
 | `gradle-version` | No | `9.2.0` | Gradle version to use |
