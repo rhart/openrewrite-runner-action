@@ -46,15 +46,14 @@ for SELECTED_RECIPE in "${RECIPE_ARRAY[@]}"; do
   SELECTED_RECIPE_TRIM=$(echo "${SELECTED_RECIPE}" | xargs)
   [ -z "${SELECTED_RECIPE_TRIM}" ] && continue
 
-  # Support both .yml and .yaml; anchor name line exactly (allow trailing spaces)
+  # Support both .yml and .yaml in recipes-dir and subdirectories
   RECIPE_FILE=""
-  for f in "${RECIPES_DIR}"/*.yml "${RECIPES_DIR}"/*.yaml; do
-    [ -e "$f" ] || continue
+  while IFS= read -r -d '' f; do
     if grep -Eq "^name: *${SELECTED_RECIPE_TRIM}[[:space:]]*$" "$f"; then
       RECIPE_FILE="$f"
       break
     fi
-  done
+  done < <(find "${RECIPES_DIR}" -type f \( -name "*.yml" -o -name "*.yaml" \) -print0 2>/dev/null)
 
   if [ -z "${RECIPE_FILE}" ]; then
     echo "❌ Recipe '${SELECTED_RECIPE_TRIM}' not found in ${RECIPES_DIR} (.yml/.yaml)" >&2
