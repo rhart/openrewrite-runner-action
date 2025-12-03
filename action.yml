@@ -16,6 +16,10 @@ inputs:
   rewrite-dependencies:
     description: 'Comma-separated list of OpenRewrite dependencies. Example: org.openrewrite:rewrite-yaml:8.37.1,org.openrewrite:rewrite-json:8.37.0'
     required: false
+  working-directory:
+    description: 'Working directory for running OpenRewrite (defaults to repository root)'
+    required: false
+    default: '.'
   java-version:
     description: 'Java version to use'
     required: false
@@ -60,6 +64,7 @@ runs:
     - name: Process recipes and setup Gradle project
       id: process_recipes
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         RECIPES_CLEAN=$(echo "${{ inputs.recipes }}" | tr -d ' ')
         echo "🔧 Activating recipes: $RECIPES_CLEAN"
@@ -80,12 +85,14 @@ runs:
 
     - name: Run OpenRewrite
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         echo "▶ Running OpenRewrite using configFile rewrite.yml"
         gradle rewriteRun --no-daemon || { echo "❌ rewriteRun failed" >&2; exit 1; }
 
     - name: Clean up temporary Gradle files
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         rm -f settings.gradle build.gradle rewrite.yml
         rm -rf .gradle gradle src
@@ -94,6 +101,7 @@ runs:
     - name: Check for changes
       id: check_changes
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [[ -n $(git status --porcelain) ]]; then
           echo "changes=true" >> $GITHUB_OUTPUT

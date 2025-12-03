@@ -1,0 +1,39 @@
+# Basic usage of the OpenRewrite Runner Action
+# This example runs a recipe and shows the results without creating a PR
+
+name: OpenRewrite Basic
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipes:
+        description: 'Comma-separated recipe names'
+        required: true
+      recipe-parameters:
+        description: 'Recipe parameters (recipeName.paramName=value)'
+        required: false
+
+jobs:
+  run-openrewrite:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run OpenRewrite
+        id: openrewrite
+        uses: rhart/openrewrite-runner-action@main
+        with:
+          recipes: ${{ github.event.inputs.recipes }}
+          recipe-parameters: ${{ github.event.inputs.recipe-parameters }}
+          recipes-dir: "recipes"
+          rewrite-dependencies: "org.openrewrite:rewrite-yaml:8.66.3"
+
+      - name: Show results
+        run: |
+          echo "Changes detected: ${{ steps.openrewrite.outputs.changes-detected }}"
+          echo "Activated recipes: ${{ steps.openrewrite.outputs.activated-recipes }}"
+          if [[ "${{ steps.openrewrite.outputs.changes-detected }}" == "true" ]]; then
+            git diff
+          fi
