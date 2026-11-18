@@ -47,7 +47,7 @@ runs:
     - name: Ensure scripts are executable
       shell: bash
       run: |
-        chmod +x ${{ github.action_path }}/scripts/*.sh
+        chmod +x "$GITHUB_ACTION_PATH"/scripts/*.sh
 
     - name: Set up JDK
       uses: actions/setup-java@v4
@@ -65,23 +65,31 @@ runs:
       id: process_recipes
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      # Inputs reach the scripts through the environment rather than being expanded into this script:
+      # a parameter value such as `${name}` arrives as written.
+      env:
+        RECIPES: ${{ inputs.recipes }}
+        RECIPES_DIR: ${{ inputs.recipes-dir }}
+        RECIPE_PARAMETERS: ${{ inputs.recipe-parameters }}
+        REWRITE_DEPENDENCIES: ${{ inputs.rewrite-dependencies }}
+        OPENREWRITE_VERSION: ${{ inputs.openrewrite-version }}
       run: |
-        RECIPES_CLEAN=$(echo "${{ inputs.recipes }}" | tr -d ' ')
+        RECIPES_CLEAN=$(printf '%s' "$RECIPES" | tr -d ' ')
         echo "🔧 Activating recipes: $RECIPES_CLEAN"
 
-        "${{ github.action_path }}/scripts/process-recipes.sh" \
-          "${{ inputs.recipes-dir }}" \
+        "$GITHUB_ACTION_PATH/scripts/process-recipes.sh" \
+          "$RECIPES_DIR" \
           "$RECIPES_CLEAN" \
-          "${{ inputs.recipe-parameters }}"
+          "$RECIPE_PARAMETERS"
 
         # Show complete rewrite.yml content after recipes are added
         echo "📄 rewrite.yml content:"; sed 's/^/   /' rewrite.yml
 
         # Setup Gradle wrapper and build files
-        "${{ github.action_path }}/scripts/setup-gradle.sh" \
+        "$GITHUB_ACTION_PATH/scripts/setup-gradle.sh" \
           "$RECIPES_CLEAN" \
-          "${{ inputs.rewrite-dependencies }}" \
-          "${{ inputs.openrewrite-version }}"
+          "$REWRITE_DEPENDENCIES" \
+          "$OPENREWRITE_VERSION"
 
     - name: Run OpenRewrite
       shell: bash
